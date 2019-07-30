@@ -50,16 +50,17 @@ rm -rf dist
 rm -f ./config.cache
 
 ../configure --with-android-ndk=$NDK_ROOT \
-             --with-android-sdk=$HOME/bin/android-sdk \
-             --with-android-toolchain=$NDK_ROOT/toolchains/${TOOLS_ARCH}-${GCC_VERSION}/prebuilt/${host_os}-${host_arch} \
-             --with-android-version=9 \
+             --with-android-sdk=$ANDROID_SDK_ROOT \
+             --with-android-toolchain=$NDK_ROOT/toolchains/llvm/prebuilt/${host_os}-${host_arch} \
+             --with-android-version=14 \
+             --enable-readline=no \
              --enable-application=mobile/android \
              --with-android-gnu-compiler-version=${GCC_VERSION} \
-             --with-arch=${CPU_ARCH} \
-             --enable-android-libstdcxx \
+             --with-android-arch=${CPU_ARCH} \
              --target=${TARGET_NAME} \
              --disable-shared-js \
              --disable-tests \
+             --disable-debug \
              --enable-strip \
              --enable-install-strip \
              --disable-debug \
@@ -67,7 +68,7 @@ rm -f ./config.cache
              --disable-threadsafe
 
 # make
-make -j15
+make -j8
 
 if [[ $develop ]]; then
     rm ../../../include
@@ -93,29 +94,98 @@ fi
 
 }
 
-# Build with armv6
-TOOLS_ARCH=arm-linux-androideabi
-TARGET_NAME=arm-linux-androideabi
-CPU_ARCH=armv6
-RELEASE_ARCH_DIR=armeabi
-GCC_VERSION=4.6
-TOOLNAME_PREFIX=arm-linux-androideabi
-build_with_arch
+build_with_arm64()
+{
 
-# Build with armv7
-TOOLS_ARCH=arm-linux-androideabi
-TARGET_NAME=arm-linux-androideabi
-CPU_ARCH=armv7-a
-RELEASE_ARCH_DIR=armeabi-v7a
-GCC_VERSION=4.6
-TOOLNAME_PREFIX=arm-linux-androideabi
-build_with_arch
+#NDK_ROOT=$HOME/bin/android-ndk
+if [[ ! $NDK_ROOT ]]; then
+	echo "You have to define NDK_ROOT"
+	exit 1
+fi
 
-# Build with x86
-TOOLS_ARCH=x86
-TARGET_NAME=i686-linux-android
-CPU_ARCH=i686
-RELEASE_ARCH_DIR=x86
-GCC_VERSION=4.6
-TOOLNAME_PREFIX=i686-linux-android
-build_with_arch
+rm -rf dist
+rm -f ./config.cache
+
+../configure --with-android-ndk=$NDK_ROOT \
+             --with-android-sdk=$ANDROID_SDK_ROOT \
+             --with-android-toolchain=$NDK_ROOT/toolchains/llvm/prebuilt/${host_os}-${host_arch} \
+             --with-android-version=21 \
+             --enable-application=mobile/android \
+             --with-android-gnu-compiler-version=${GCC_VERSION} \
+             --with-android-arch=${CPU_ARCH} \
+             --target=${TARGET_NAME} \
+             --disable-shared-js \
+             --disable-tests \
+             --enable-strip \
+             --enable-install-strip \
+             --disable-gcgenerational \
+             --disable-exact-rooting \
+             --disable-root-analysis \
+             --enable-gcincremental \
+             --disable-debug \
+             --disable-gczeal \
+             --without-intl-api \
+             --disable-threadsafe
+
+# make
+make -j8
+
+if [[ $develop ]]; then
+    rm ../../../include
+    rm ../../../lib
+
+    ln -s -f "$PWD"/dist/include ../../..
+    ln -s -f "$PWD"/dist/lib ../../..
+fi
+
+if [[ $release ]]; then
+# copy specific files from dist
+    rm -r "$RELEASE_DIR/include"
+    rm -r "$RELEASE_DIR/lib/$RELEASE_ARCH_DIR"
+    mkdir -p "$RELEASE_DIR/include"
+    cp -RL dist/include/* "$RELEASE_DIR/include/"
+    mkdir -p "$RELEASE_DIR/lib/$RELEASE_ARCH_DIR"
+    cp -L dist/lib/libjs_static.a "$RELEASE_DIR/lib/$RELEASE_ARCH_DIR/libjs_static.a"
+
+# strip unneeded symbols
+    $NDK_ROOT/toolchains/${TOOLS_ARCH}-${GCC_VERSION}/prebuilt/${host_os}-${host_arch}/bin/${TOOLNAME_PREFIX}-strip \
+        --strip-unneeded "$RELEASE_DIR/lib/$RELEASE_ARCH_DIR/libjs_static.a"
+fi
+
+}
+
+# # Build with armv6
+# TOOLS_ARCH=arm-linux-androideabi
+# TARGET_NAME=arm-linux-androideabi
+# CPU_ARCH=armeabi
+# RELEASE_ARCH_DIR=armeabi
+# GCC_VERSION=4.9
+# TOOLNAME_PREFIX=arm-linux-androideabi
+# build_with_arch
+
+# # Build with armv7
+# TOOLS_ARCH=arm-linux-androideabi
+# TARGET_NAME=arm-linux-androideabi
+# CPU_ARCH=armeabi-v7a
+# RELEASE_ARCH_DIR=armeabi-v7a
+# GCC_VERSION=4.9
+# TOOLNAME_PREFIX=arm-linux-androideabi
+# build_with_arch
+
+# Build with arm64
+TOOLS_ARCH=aarch64-linux-android
+TARGET_NAME=aarch64-linux-android
+CPU_ARCH=arm64-v8a
+RELEASE_ARCH_DIR=arm64-v8a
+GCC_VERSION=4.9
+TOOLNAME_PREFIX=aarch64-linux-android
+build_with_arm64
+
+# # Build with x86
+# TOOLS_ARCH=x86
+# TARGET_NAME=i686-linux-android
+# CPU_ARCH=x86
+# RELEASE_ARCH_DIR=x86
+# GCC_VERSION=4.9
+# TOOLNAME_PREFIX=i686-linux-android
+# build_with_arch
