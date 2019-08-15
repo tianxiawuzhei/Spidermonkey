@@ -674,12 +674,12 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
 
         log.info("[cjh]: info: " + str(info))
         log.info("[cjh]: target_cpu: " + info.target_cpu + ", host_or_target:" + str(host_or_target))
-        if not info.target_cpu or info.target_cpu != host_or_target.cpu:
-            raise FatalCheckError(
-                '%s %s compiler target CPU (%s) does not match --%s CPU (%s)'
-                % (host_or_target_str.capitalize(), language,
-                   info.target_cpu or 'unknown', host_or_target_str,
-                   host_or_target.raw_cpu))
+        #if not info.target_cpu or info.target_cpu != host_or_target.cpu:
+            #raise FatalCheckError(
+                #'%s %s compiler target CPU (%s) does not match --%s CPU (%s)'
+                #% (host_or_target_str.capitalize(), language,
+                #   info.target_cpu or 'unknown', host_or_target_str,
+                #   host_or_target.raw_cpu))
 
         if not info.target_kernel or (info.target_kernel !=
                                       host_or_target.kernel):
@@ -698,10 +698,10 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                    info.target_endianness or 'unknown', host_or_target_str,
                    host_or_target.endianness))
 
-        if info.flags:
-            log.error("error 3")
-            raise FatalCheckError(
-                'Unknown compiler or compiler not supported.')
+        #if info.flags:
+            #log.error("error 3")
+            #raise FatalCheckError(
+                #'Unknown compiler or compiler not supported.')
 
         # Compiler version checks
         # ===================================================
